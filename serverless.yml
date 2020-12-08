@@ -1,0 +1,60 @@
+service: tesseract-ocr-example
+
+plugins:
+    - serverless-plugin-layer-manager
+
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'us-east-1'}
+  # deploymentBucket: tmp.${self:provider.region}.deploys
+  environment:
+    TESSDATA_PREFIX: /opt/lib/tessdata
+
+custom:
+  prefix-name: ${self:service}-${self:provider.stage}
+  layerConfig:
+    installLayers: true
+    exportLayers: true
+    upgradeLayerReferences: true
+
+layers:
+  TesseractBinary:
+    path: ./layers/tesseract
+    name: ${self:custom.prefix-name}-tesseract-binary
+    description: 'Tesseract Binary'
+    compatibleRuntimes:
+      - python3.6
+      - python3.7
+      - nodejs10.x
+      - nodejs12.x
+  GeneralNodeModules:
+    path: ./layers/general
+    name: ${self:custom.prefix-name}-general-node-modules
+    description: 'General shared node modules'
+    compatibleRuntimes:
+      - nodejs10.x
+      - nodejs12.x
+
+package:
+  excludeDevDependencies: false
+  exclude:
+    - layers/**
+    - node_modules/**
+
+functions:
+  tesseract-ocr:
+    handler: handler.main
+    timeout: 30
+    layers:
+      - {Ref: TesseractBinaryLambdaLayer}
+      - {Ref: GeneralNodeModulesLambdaLayer}
+    events:
+      - http:
+          path: ocr
+          method: post
+      - http:
+          path: ocr
+          method: get

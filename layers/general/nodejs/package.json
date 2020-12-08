@@ -1,0 +1,7 @@
+{
+  "name": "general-node-modules-layer",
+  "version": "1.0.0",
+  "dependencies": {
+    "@shelf/aws-lambda-tesseract": "^3.0.0"
+  }
+}
